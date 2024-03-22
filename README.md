@@ -12,6 +12,7 @@ Now the idea here is to make a bot that can host a crypt hunt competition. Proje
         - [x] Team
     - [ ] Login
 - [ ] Question Progress
-- [ ] Hints (Button Interation)
+- [ ] Current Rank
+- [ ] Leaderboard
 - [ ] Ending the game
 
