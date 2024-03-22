@@ -32,7 +32,29 @@ pub async fn get_user(user: &User, ctx: Context<'_>) -> Result<Vec<Document>, Er
     let collection: Collection<Document> = db_ref.collection("User");
 
     let mut cursor: Result<mongodb::Cursor<Document>, mongodb::error::Error>;
-    cursor = collection.find(doc! { "user": user.tag()}, None).await;
+    cursor = collection.find(doc! { "username": user.tag()}, None).await;
+
+    let mut current_presents: Vec<Document> = Vec::new();
+
+    while let Ok(cursor) = &mut cursor {
+        if let Some(doc) = cursor.try_next().await? {
+            current_presents.push(doc);
+        } else {
+            break; // No more documents in the cursor, exit the loop
+        }
+    }
+
+    Ok(current_presents)
+}
+
+pub async fn get_team(name: &str, ctx: Context<'_>) -> Result<Vec<Document>, Error> {
+    let db = ctx.data().mongo.clone();
+    let client_ref: &MongoClient = db.as_ref();
+    let db_ref = client_ref.database("linear");
+    let collection: Collection<Document> = db_ref.collection("Team");
+
+    let mut cursor: Result<mongodb::Cursor<Document>, mongodb::error::Error>;
+    cursor = collection.find(doc! { "name": name}, None).await;
 
     let mut current_presents: Vec<Document> = Vec::new();
 

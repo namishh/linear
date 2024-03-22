@@ -7,7 +7,9 @@ Now the idea here is to make a bot that can host a crypt hunt competition. Proje
 - [x] Better File Structure
 - [x] Implementing Cooldowns
 - [ ] Authentication
-    - [ ] Register
+    - [x] Register
+        - [x] User
+        - [x] Team
     - [ ] Login
 - [ ] Question Progress
 - [ ] Hints (Button Interation)
