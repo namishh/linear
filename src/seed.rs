@@ -15,22 +15,27 @@ pub async fn seed(mongo: &mongodb::Client) -> Result<(), mongodb::error::Error> 
     let data: Vec<Document> = vec![
         doc! {
             "question": "What is the meaning of life?",
+            "level": 0,
             "answer": get_hashed_var("ANSWER_1"),
         },
         doc! {
            "question": "What is not the meaning of life?",
+            "level": 1,
             "answer": get_hashed_var("ANSWER_2"),
         },
         doc! {
            "question": "Who is the best programmer?",
+            "level": 2,
             "answer": get_hashed_var("ANSWER_3"),
         },
         doc! {
            "question": "Who is the worst programmer?",
+            "level": 3,
             "answer": get_hashed_var("ANSWER_4"),
         },
         doc! {
            "question": "Who is the best at being offended?",
+            "level": 4,
             "answer": get_hashed_var("ANSWER_5"),
         },
     ];

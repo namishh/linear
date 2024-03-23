@@ -46,7 +46,7 @@ pub async fn register_team(
             let document = doc! {
                 "password": hashed?.clone(),
                 "points": 0,
-                "members": 0,
+                "level": 0,
                 "name": team_name.clone()
             };
             let _ = collection.insert_one(document, None).await?;

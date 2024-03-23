@@ -87,3 +87,25 @@ pub async fn get_team(name: &str, ctx: Context<'_>) -> Result<Vec<Document>, Err
 
     Ok(current_presents)
 }
+
+pub async fn get_question(level: &i32, ctx: Context<'_>) -> Result<Vec<Document>, Error> {
+    let db = ctx.data().mongo.clone();
+    let client_ref: &MongoClient = db.as_ref();
+    let db_ref = client_ref.database("linear");
+    let collection: Collection<Document> = db_ref.collection("Questions");
+
+    let mut cursor: Result<mongodb::Cursor<Document>, mongodb::error::Error>;
+    cursor = collection.find(doc! { "level": level}, None).await;
+
+    let mut current_presents: Vec<Document> = Vec::new();
+
+    while let Ok(cursor) = &mut cursor {
+        if let Some(doc) = cursor.try_next().await? {
+            current_presents.push(doc);
+        } else {
+            break; // No more documents in the cursor, exit the loop
+        }
+    }
+
+    Ok(current_presents)
+}
