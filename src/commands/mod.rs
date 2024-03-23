@@ -10,6 +10,8 @@ pub fn get_commands(
         tests::avatar(),
         auth::register_team(),
         auth::register_user(),
+        auth::login_team(),
+        auth::logout(),
     ];
     commands
 }

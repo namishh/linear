@@ -51,7 +51,7 @@ pub async fn get_team(name: &str, ctx: Context<'_>) -> Result<Vec<Document>, Err
     let db = ctx.data().mongo.clone();
     let client_ref: &MongoClient = db.as_ref();
     let db_ref = client_ref.database("linear");
-    let collection: Collection<Document> = db_ref.collection("Team");
+    let collection: Collection<Document> = db_ref.collection("Teams");
 
     let mut cursor: Result<mongodb::Cursor<Document>, mongodb::error::Error>;
     cursor = collection.find(doc! { "name": name}, None).await;

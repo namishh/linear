@@ -6,13 +6,14 @@ Now the idea here is to make a bot that can host a crypt hunt competition. Proje
 
 - [x] Better File Structure
 - [x] Implementing Cooldowns
-- [ ] Authentication
+- [x] Authentication
     - [x] Register
         - [x] User
         - [x] Team
-    - [ ] Login
+    - [x] Login
+    - [x] Logout
 - [ ] Question Progress
 - [ ] Current Rank
 - [ ] Leaderboard
 - [ ] Ending the game
-
+- [ ] ADD COOLDOWN IN EACH COMMAND
