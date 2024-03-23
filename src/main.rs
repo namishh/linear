@@ -9,6 +9,8 @@ use std::sync::Arc;
 
 use serenity::model::gateway::GatewayIntents;
 
+//mod seed;
+
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -31,6 +33,8 @@ async fn main() {
     let mongo = MongoClient::with_uri_str(uri)
         .await
         .expect("Error while connecting");
+
+    //let _ = seed::seed(&mongo).await;
 
     let token = std::env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     let intents = GatewayIntents::all();

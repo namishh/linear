@@ -47,6 +47,25 @@ pub async fn get_user(user: &User, ctx: Context<'_>) -> Result<Vec<Document>, Er
     Ok(current_presents)
 }
 
+pub async fn logged_in(user: &User, ctx: Context<'_>) -> bool {
+    let user = match get_user(&user, ctx.clone()).await {
+        Ok(user) => user,
+        Err(_err) => {
+            return false;
+        }
+    };
+
+    if !user[0]
+        .get_str("team_name")
+        .expect("could not find name")
+        .is_empty()
+    {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 pub async fn get_team(name: &str, ctx: Context<'_>) -> Result<Vec<Document>, Error> {
     let db = ctx.data().mongo.clone();
     let client_ref: &MongoClient = db.as_ref();

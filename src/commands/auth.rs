@@ -104,7 +104,7 @@ pub async fn login_team(
         }
     };
 
-    if !user[0].get_str("team_name")?.is_empty() {
+    if helpers::logged_in(author, ctx).await {
         ctx.say(format!(
             "Already Logged In With Team {}",
             user[0].get_str("team_name")?
