@@ -17,6 +17,7 @@ pub fn get_commands(
         // The Game
         game::get_question(),
         game::answer(),
+        game::leaderboard(),
     ];
     commands
 }

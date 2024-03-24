@@ -1,7 +1,9 @@
 use crate::commands::helpers;
 use crate::{Context, Error};
+use futures::stream::StreamExt;
 use mongodb::bson::doc;
 use mongodb::bson::Document;
+use mongodb::options::FindOptions;
 use mongodb::Client as MongoClient;
 use mongodb::Collection;
 use pwhash::bcrypt;
@@ -105,7 +107,7 @@ pub async fn answer(ctx: Context<'_>, #[description = "Guess"] guess: String) ->
                     client_ref.database("linear").collection("Teams");
 
                 let filter = doc! { "name": teamname };
-                let update = doc! { "$set": doc! {"level":  level + 1} };
+                let update = doc! { "$set": doc! {"level":  level + 1, "last_updated": chrono::Utc::now().timestamp_millis()} };
 
                 collection.update_one(filter, update, None).await?;
 
@@ -128,5 +130,53 @@ pub async fn answer(ctx: Context<'_>, #[description = "Guess"] guess: String) ->
     } else {
         ctx.say("Not Logged In With A Team").await?;
     }
+    Ok(())
+}
+
+#[poise::command(slash_command, prefix_command, aliases("lb"))]
+pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
+    let db = ctx.data().mongo.clone();
+    let client_ref: &MongoClient = db.as_ref();
+    let collection: Collection<Document> = client_ref.database("linear").collection("Teams");
+
+    let sort_criteria = doc! {
+        "level": -1,
+        "last_updated": 1
+    };
+
+    let options = FindOptions::builder().sort(sort_criteria).build();
+    let mut cursor = collection.find(None, options).await?;
+
+    let mut embed = CreateEmbed::default().title("👑 LeaderBoard");
+    let mut m = CreateEmbed::default();
+
+    let mut leaderboard: Vec<Document> = Vec::new();
+    while let Some(result) = cursor.next().await {
+        match result {
+            Ok(document) => {
+                leaderboard.push(document.clone()); // Cloning the document to print it later
+            }
+            Err(e) => {
+                eprintln!("Error fetching team: {}", e);
+            }
+        }
+    }
+
+    for (index, document) in leaderboard.iter().enumerate() {
+        embed = embed.field(
+            format!(
+                "#{} Team {} ",
+                index + 1,
+                document.get_str("name").unwrap_or("NIL")
+            ),
+            format!("{}", document.get_i32("level").unwrap_or(0) * 1000),
+            true,
+        );
+        m = embed.clone()
+    }
+
+    let builder = poise::CreateReply::default().embed(m);
+    ctx.send(builder).await?;
+
     Ok(())
 }

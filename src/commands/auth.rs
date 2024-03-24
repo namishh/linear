@@ -1,5 +1,6 @@
 use crate::commands::helpers;
 use crate::{Context, Error};
+use chrono::Utc;
 use mongodb::bson::doc;
 use mongodb::bson::Document;
 use mongodb::Client as MongoClient;
@@ -45,8 +46,8 @@ pub async fn register_team(
             let hashed = bcrypt::hash(password);
             let document = doc! {
                 "password": hashed?.clone(),
-                "points": 0,
                 "level": 0,
+                "last_updated": Utc::now().timestamp_millis(),
                 "name": team_name.clone()
             };
             let _ = collection.insert_one(document, None).await?;
