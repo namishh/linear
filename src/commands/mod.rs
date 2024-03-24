@@ -16,6 +16,7 @@ pub fn get_commands(
         auth::logout(),
         // The Game
         game::get_question(),
+        game::answer(),
     ];
     commands
 }
