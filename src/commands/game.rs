@@ -64,7 +64,12 @@ pub async fn get_question(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 // WARN: Hardcoded number of questions
-#[poise::command(slash_command, prefix_command, aliases("an"))]
+#[poise::command(
+    slash_command,
+    prefix_command,
+    aliases("an"),
+    help_text_fn = "help_answer"
+)]
 pub async fn answer(ctx: Context<'_>, #[description = "Guess"] guess: String) -> Result<(), Error> {
     let author = &ctx.author();
     if helpers::logged_in(author, ctx).await {
@@ -131,6 +136,14 @@ pub async fn answer(ctx: Context<'_>, #[description = "Guess"] guess: String) ->
         ctx.say("Not Logged In With A Team").await?;
     }
     Ok(())
+}
+
+fn help_answer() -> String {
+    String::from(
+        "\
+example usage:
+?c answer <answer>",
+    )
 }
 
 #[poise::command(slash_command, prefix_command, aliases("lb"))]

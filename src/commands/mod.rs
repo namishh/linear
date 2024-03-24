@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod game;
+pub mod help;
 pub mod helpers;
 pub mod tests;
 use crate::Data;
@@ -18,6 +19,8 @@ pub fn get_commands(
         game::get_question(),
         game::answer(),
         game::leaderboard(),
+        // Silly Help Function
+        help::howto(),
     ];
     commands
 }
