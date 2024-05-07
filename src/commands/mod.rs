@@ -19,6 +19,7 @@ pub fn get_commands(
         game::get_question(),
         game::answer(),
         game::hint(),
+        game::giveaway(),
         game::leaderboard(),
         // Silly Help Function
         help::howto(),

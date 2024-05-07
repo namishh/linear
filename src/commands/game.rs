@@ -119,16 +119,17 @@ pub async fn hint(ctx: Context<'_>) -> Result<(), Error> {
         let db = ctx.data().mongo.clone();
         let client_ref: &MongoClient = db.as_ref();
         let collection: Collection<Document> = client_ref.database("linear").collection("Teams");
-        let team = match helpers::get_team_by_user(ctx).await {
+        let mut team = match helpers::get_team_by_user(ctx).await {
             Ok(team) => team,
             Err(err) => {
                 return Err(err);
             }
         };
-        let giveaways = team[0]
-            .get_array("hints")
+        let used_hints = team[0]
+            .get_array_mut("hints")
             .expect("Could not fetch used hints");
-        println!("{:?}", giveaways);
+
+        let mut uh = used_hints.clone();
         let question_arr = helpers::get_team_question(ctx).await?;
         let question = &question_arr[0];
 
@@ -138,7 +139,7 @@ pub async fn hint(ctx: Context<'_>) -> Result<(), Error> {
 
         let hint = question.get_str("hint").expect("Cannot get hint");
 
-        if giveaways
+        if used_hints
             .iter()
             .any(|i| i == &mongodb::bson::Bson::Int32(curr_level))
         {
@@ -149,6 +150,62 @@ pub async fn hint(ctx: Context<'_>) -> Result<(), Error> {
                 ))
                 .await;
         } else {
+            uh.append(&mut vec![mongodb::bson::Bson::Int32(curr_level)]);
+            let filter = doc! { "name": &team[0].get_str("name").expect("LOL") };
+            let update = doc! { "$set": doc! {"hints": uh}};
+            collection.update_one(filter, update, None).await?;
+            let _ = ctx
+                .say(format!("100 Points Would Be Deducted.\n HINT: {}", hint))
+                .await;
+        }
+    } else {
+        ctx.say("Not Logged In With A Team").await?;
+    }
+    Ok(())
+}
+
+#[poise::command(slash_command, prefix_command, guild_only)]
+pub async fn giveaway(ctx: Context<'_>) -> Result<(), Error> {
+    let author = &ctx.author();
+    if helpers::logged_in(author, ctx).await {
+        let db = ctx.data().mongo.clone();
+        let client_ref: &MongoClient = db.as_ref();
+        let collection: Collection<Document> = client_ref.database("linear").collection("Teams");
+        let mut team = match helpers::get_team_by_user(ctx).await {
+            Ok(team) => team,
+            Err(err) => {
+                return Err(err);
+            }
+        };
+        let used_hints = team[0]
+            .get_array_mut("giveaways")
+            .expect("Could not fetch used hints");
+
+        let mut uh = used_hints.clone();
+        let question_arr = helpers::get_team_question(ctx).await?;
+        let question = &question_arr[0];
+
+        let curr_level = question
+            .get_i32("level")
+            .expect("curr level not found: hint");
+
+        let hint = question.get_str("giveaway").expect("Cannot get hint");
+
+        if used_hints
+            .iter()
+            .any(|i| i == &mongodb::bson::Bson::Int32(curr_level))
+        {
+            let _ = ctx
+                .say(format!(
+                    "Giveaway Already Given! No Further Points Would be Deducted.\n HINT: {}",
+                    hint
+                ))
+                .await;
+        } else {
+            uh.append(&mut vec![mongodb::bson::Bson::Int32(curr_level)]);
+            let filter = doc! { "name": &team[0].get_str("name").expect("LOL") };
+            let update = doc! { "$set": doc! {"giveaways": uh}};
+            collection.update_one(filter, update, None).await?;
             let _ = ctx
                 .say(format!("100 Points Would Be Deducted.\n HINT: {}", hint))
                 .await;
@@ -189,13 +246,18 @@ pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
     }
 
     for (index, document) in leaderboard.iter().enumerate() {
+        let mut points = document.get_i32("level").unwrap_or(0) * 1000;
+        let g = document.get_array("giveaways").expect("ERROR").len() as i32;
+        let h = document.get_array("hints").expect("ERROR").len() as i32;
+        let tosub = (g + h) * 100 as i32;
+        points = points - tosub;
         embed = embed.field(
             format!(
                 "#{} Team {} ",
                 index + 1,
                 document.get_str("name").unwrap_or("NIL")
             ),
-            format!("{}", document.get_i32("level").unwrap_or(0) * 1000),
+            format!("{}", points),
             true,
         );
         m = embed.clone()

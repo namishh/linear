@@ -15,5 +15,7 @@ Now the idea here is to make a bot that can host a crypt hunt competition. Proje
 - [x] Seeding Questions
 - [x] Question Progress
 - [x] Leaderboard
+- [x] Hints
+- [x] Giveaways
 - [x] Ending the game
 - [ ] ADD COOLDOWN IN EACH COMMAND || I will do this later
