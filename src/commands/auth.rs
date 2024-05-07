@@ -7,7 +7,13 @@ use mongodb::Client as MongoClient;
 use mongodb::Collection;
 use pwhash::bcrypt;
 
-#[poise::command(slash_command, prefix_command, aliases("rt"), help_text_fn = "help_rt")]
+#[poise::command(
+    slash_command,
+    guild_only,
+    prefix_command,
+    aliases("rt"),
+    help_text_fn = "help_rt"
+)]
 pub async fn register_team(
     ctx: Context<'_>,
     #[description = "Team Name?"] team_name: String,
@@ -68,7 +74,7 @@ Example Usage (Team Name and Password are one word):
     )
 }
 
-#[poise::command(slash_command, prefix_command, aliases("ru"))]
+#[poise::command(slash_command, guild_only, prefix_command, aliases("ru"))]
 pub async fn register_user(ctx: Context<'_>) -> Result<(), Error> {
     let author = &ctx.author();
     helpers::check_cooldown(&ctx, 100).await?;
@@ -99,7 +105,13 @@ pub async fn register_user(ctx: Context<'_>) -> Result<(), Error> {
 
 // Login Command, takes in team name and password
 
-#[poise::command(slash_command, prefix_command, aliases("lt"), help_text_fn = "help_lt")]
+#[poise::command(
+    slash_command,
+    guild_only,
+    prefix_command,
+    aliases("lt"),
+    help_text_fn = "help_lt"
+)]
 pub async fn login_team(
     ctx: Context<'_>,
     #[description = "Team Name"] team_name: String,
@@ -167,7 +179,7 @@ Example Usage (Team Name and Password are one word):
 }
 
 // Logout Command
-#[poise::command(slash_command, prefix_command, aliases("lo"))]
+#[poise::command(slash_command, guild_only, prefix_command, aliases("lo"))]
 pub async fn logout(ctx: Context<'_>) -> Result<(), Error> {
     let author = &ctx.author();
     let user = match helpers::get_user(&author, ctx.clone()).await {

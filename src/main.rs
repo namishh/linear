@@ -34,7 +34,7 @@ async fn main() {
         .await
         .expect("Error while connecting");
 
-//    let _ = seed::seed(&mongo).await;
+    //  let _ = seed::seed(&mongo).await;
 
     let token = std::env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     let intents = GatewayIntents::all();

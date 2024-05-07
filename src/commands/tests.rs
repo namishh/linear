@@ -4,7 +4,7 @@ use poise::serenity_prelude as serenity;
 use serenity::builder::CreateEmbed;
 use serenity::model::colour::Colour;
 
-#[poise::command(slash_command, prefix_command)]
+#[poise::command(slash_command, guild_only, prefix_command)]
 pub async fn ping(
     ctx: Context<'_>,
     #[description = "Selected user"] user: Option<serenity::User>,
@@ -18,7 +18,7 @@ pub async fn ping(
     Ok(())
 }
 
-#[poise::command(slash_command, prefix_command, aliases("av"))]
+#[poise::command(slash_command, guild_only, prefix_command, aliases("av"))]
 pub async fn avatar(
     ctx: Context<'_>,
     #[description = "Selected user"] user: Option<serenity::User>,

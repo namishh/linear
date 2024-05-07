@@ -10,7 +10,7 @@ use pwhash::bcrypt;
 use serenity::builder::{CreateEmbed, CreateEmbedFooter};
 use serenity::model::colour::Colour;
 
-#[poise::command(slash_command, prefix_command, aliases("question"))]
+#[poise::command(slash_command, guild_only, prefix_command, aliases("question"))]
 pub async fn get_question(ctx: Context<'_>) -> Result<(), Error> {
     // helpers::check_cooldown(&ctx, 10).await?;
     let author = &ctx.author();
@@ -42,23 +42,14 @@ pub async fn get_question(ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(
     slash_command,
     prefix_command,
+    guild_only,
     aliases("an"),
     help_text_fn = "help_answer"
 )]
 pub async fn answer(ctx: Context<'_>, #[description = "Guess"] guess: String) -> Result<(), Error> {
     let author = &ctx.author();
     if helpers::logged_in(author, ctx).await {
-        let user = match helpers::get_user(&author, ctx.clone()).await {
-            Ok(user) => user,
-            Err(err) => {
-                return Err(err);
-            }
-        };
-        let teamname = user[0]
-            .get_str("team_name")
-            .unwrap_or("Failed To Fetch Team");
-
-        let team = match helpers::get_team(&teamname, ctx.clone()).await {
+        let team = match helpers::get_team_by_user(ctx).await {
             Ok(team) => team,
             Err(err) => {
                 return Err(err);
@@ -86,7 +77,7 @@ pub async fn answer(ctx: Context<'_>, #[description = "Guess"] guess: String) ->
                 let collection: Collection<Document> =
                     client_ref.database("linear").collection("Teams");
 
-                let filter = doc! { "name": teamname };
+                let filter = doc! { "name": team[0].get_str("name").expect("LOL") };
                 let update = doc! { "$set": doc! {"level":  level + 1, "last_updated": chrono::Utc::now().timestamp_millis()} };
 
                 collection.update_one(filter, update, None).await?;
@@ -121,19 +112,54 @@ example usage:
     )
 }
 
-#[poise::command(slash_command, prefix_command)]
+#[poise::command(slash_command, prefix_command, guild_only)]
 pub async fn hint(ctx: Context<'_>) -> Result<(), Error> {
     let author = &ctx.author();
     if helpers::logged_in(author, ctx).await {
         let db = ctx.data().mongo.clone();
         let client_ref: &MongoClient = db.as_ref();
+        let collection: Collection<Document> = client_ref.database("linear").collection("Teams");
+        let team = match helpers::get_team_by_user(ctx).await {
+            Ok(team) => team,
+            Err(err) => {
+                return Err(err);
+            }
+        };
+        let giveaways = team[0]
+            .get_array("hints")
+            .expect("Could not fetch used hints");
+        println!("{:?}", giveaways);
+        let question_arr = helpers::get_team_question(ctx).await?;
+        let question = &question_arr[0];
+
+        let curr_level = question
+            .get_i32("level")
+            .expect("curr level not found: hint");
+
+        let hint = question.get_str("hint").expect("Cannot get hint");
+
+        if giveaways
+            .iter()
+            .any(|i| i == &mongodb::bson::Bson::Int32(curr_level))
+        {
+            let _ = ctx
+                .say(format!(
+                    "Hint Already Given! No Further Points Would be Deducted.\n HINT: {}",
+                    hint
+                ))
+                .await;
+        } else {
+            let _ = ctx
+                .say(format!("100 Points Would Be Deducted.\n HINT: {}", hint))
+                .await;
+        }
     } else {
         ctx.say("Not Logged In With A Team").await?;
     }
     Ok(())
 }
 
-#[poise::command(slash_command, prefix_command, aliases("lb"))]
+#[poise::command(slash_command, guild_only, prefix_command, aliases("lb"))]
 pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
     let db = ctx.data().mongo.clone();
     let client_ref: &MongoClient = db.as_ref();

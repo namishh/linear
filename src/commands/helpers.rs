@@ -143,3 +143,20 @@ pub async fn get_team_question(ctx: Context<'_>) -> Result<Vec<Document>, Error>
 
     Ok(question)
 }
+
+pub async fn get_team_by_user(ctx: Context<'_>) -> Result<Vec<Document>, Error> {
+    let author = &ctx.author();
+
+    let user = match get_user(&author, ctx.clone()).await {
+        Ok(user) => user,
+        Err(err) => {
+            return Err(err);
+        }
+    };
+    let teamname = user[0]
+        .get_str("team_name")
+        .unwrap_or("Failed To Fetch Team");
+
+    let team = get_team(&teamname, ctx.clone()).await?;
+    Ok(team)
+}
