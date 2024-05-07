@@ -48,7 +48,9 @@ pub async fn register_team(
                 "password": hashed?.clone(),
                 "level": 0,
                 "last_updated": Utc::now().timestamp_millis(),
-                "name": team_name.clone()
+                "name": team_name.clone(),
+                "giveaways": Vec::<i32>::new(),
+                "hints": Vec::<i32>::new(),
             };
             let _ = collection.insert_one(document, None).await?;
             ctx.say(format!("Team **{}** registered", team_name))

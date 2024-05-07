@@ -17,26 +17,36 @@ pub async fn seed(mongo: &mongodb::Client) -> Result<(), mongodb::error::Error> 
             "question": "What is the meaning of life?",
             "level": 0,
             "answer": get_hashed_var("ANSWER_1"),
+            "hint": get_hashed_var("HINT_1"),
+            "giveaway": get_hashed_var("GIVEAWAY_1"),
         },
         doc! {
            "question": "What is not the meaning of life?",
             "level": 1,
             "answer": get_hashed_var("ANSWER_2"),
+            "hint": get_hashed_var("HINT_2"),
+            "giveaway": get_hashed_var("GIVEAWAY_2"),
         },
         doc! {
            "question": "Who is the best programmer?",
             "level": 2,
             "answer": get_hashed_var("ANSWER_3"),
+            "hint": get_hashed_var("HINT_3"),
+            "giveaway": get_hashed_var("GIVEAWAY_3"),
         },
         doc! {
            "question": "Who is the worst programmer?",
             "level": 3,
             "answer": get_hashed_var("ANSWER_4"),
+            "hint": get_hashed_var("HINT_4"),
+            "giveaway": get_hashed_var("GIVEAWAY_4"),
         },
         doc! {
            "question": "Who is the best at being offended?",
             "level": 4,
             "answer": get_hashed_var("ANSWER_5"),
+            "hint": get_hashed_var("HINT_5"),
+            "giveaway": get_hashed_var("GIVEAWAY_5"),
         },
     ];
 

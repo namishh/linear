@@ -15,32 +15,7 @@ pub async fn get_question(ctx: Context<'_>) -> Result<(), Error> {
     // helpers::check_cooldown(&ctx, 10).await?;
     let author = &ctx.author();
     if helpers::logged_in(author, ctx).await {
-        let user = match helpers::get_user(&author, ctx.clone()).await {
-            Ok(user) => user,
-            Err(err) => {
-                return Err(err);
-            }
-        };
-        let teamname = user[0]
-            .get_str("team_name")
-            .unwrap_or("Failed To Fetch Team");
-
-        let team = match helpers::get_team(&teamname, ctx.clone()).await {
-            Ok(team) => team,
-            Err(err) => {
-                return Err(err);
-            }
-        };
-
-        let level = team[0].get_i32("level").unwrap_or(0);
-
-        let question = match helpers::get_question(&level, ctx.clone()).await {
-            Ok(question) => question,
-            Err(err) => {
-                return Err(err);
-            }
-        };
-
+        let question = helpers::get_team_question(ctx).await?;
         let embed = CreateEmbed::default()
             .title(format!(
                 "Question {}: ",
@@ -144,6 +119,18 @@ fn help_answer() -> String {
 example usage:
 ?c answer <answer>",
     )
+}
+
+#[poise::command(slash_command, prefix_command)]
+pub async fn hint(ctx: Context<'_>) -> Result<(), Error> {
+    let author = &ctx.author();
+    if helpers::logged_in(author, ctx).await {
+        let db = ctx.data().mongo.clone();
+        let client_ref: &MongoClient = db.as_ref();
+    } else {
+        ctx.say("Not Logged In With A Team").await?;
+    }
+    Ok(())
 }
 
 #[poise::command(slash_command, prefix_command, aliases("lb"))]
