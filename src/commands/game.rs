@@ -252,16 +252,10 @@ pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
     for (_index, column) in j.iter().enumerate() {
         let mut page = "".to_owned();
         for (_i, doc) in column.iter().enumerate() {
-            let mut points = doc.get_i32("level").unwrap_or(0) * 1000;
-            let g = doc.get_array("giveaways").expect("ERROR").len() as i32;
-            let h = doc.get_array("hints").expect("ERROR").len() as i32;
-            let tosub = (g + h) * 100 as i32;
-            points = points - tosub;
-
             let fin = format!(
                 "Team Name: {}\n**Points** - {}\n\n",
                 doc.get_str("name").unwrap_or("NIL"),
-                points
+                doc.get_i32("points").unwrap_or(0),
             );
             page.push_str(&fin);
         }
