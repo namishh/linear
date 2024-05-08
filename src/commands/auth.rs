@@ -53,6 +53,7 @@ pub async fn register_team(
             let document = doc! {
                 "password": hashed?.clone(),
                 "level": 0,
+                "points": 0,
                 "last_updated": Utc::now().timestamp_millis(),
                 "name": team_name.clone(),
                 "giveaways": Vec::<i32>::new(),

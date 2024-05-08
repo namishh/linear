@@ -78,7 +78,7 @@ pub async fn answer(ctx: Context<'_>, #[description = "Guess"] guess: String) ->
                     client_ref.database("linear").collection("Teams");
 
                 let filter = doc! { "name": team[0].get_str("name").expect("LOL") };
-                let update = doc! { "$set": doc! {"level":  level + 1, "last_updated": chrono::Utc::now().timestamp_millis()} };
+                let update = doc! { "$set": doc! {"level":  level + 1, "points": team[0].get_i32("points").unwrap_or(0) + 1000, "last_updated": chrono::Utc::now().timestamp_millis()} };
 
                 collection.update_one(filter, update, None).await?;
 
@@ -152,7 +152,7 @@ pub async fn hint(ctx: Context<'_>) -> Result<(), Error> {
         } else {
             uh.append(&mut vec![mongodb::bson::Bson::Int32(curr_level)]);
             let filter = doc! { "name": &team[0].get_str("name").expect("LOL") };
-            let update = doc! { "$set": doc! {"hints": uh}};
+            let update = doc! { "$set": doc! {"hints": uh, "points": &team[0].get_i32("points").unwrap_or(0) - 100}};
             collection.update_one(filter, update, None).await?;
             let _ = ctx
                 .say(format!("100 Points Would Be Deducted.\n HINT: {}", hint))
@@ -204,7 +204,7 @@ pub async fn giveaway(ctx: Context<'_>) -> Result<(), Error> {
         } else {
             uh.append(&mut vec![mongodb::bson::Bson::Int32(curr_level)]);
             let filter = doc! { "name": &team[0].get_str("name").expect("LOL") };
-            let update = doc! { "$set": doc! {"giveaways": uh}};
+            let update = doc! { "$set": doc! {"giveaways": uh, "points": &team[0].get_i32("points").unwrap_or(0) - 100}};
             collection.update_one(filter, update, None).await?;
             let _ = ctx
                 .say(format!("100 Points Would Be Deducted.\n HINT: {}", hint))
@@ -216,6 +216,10 @@ pub async fn giveaway(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+fn divide_into_parts<T: Clone>(vec: Vec<T>, n: usize) -> Vec<Vec<T>> {
+    vec.chunks(n).map(|chunk| chunk.into()).collect()
+}
+
 #[poise::command(slash_command, guild_only, prefix_command, aliases("lb"))]
 pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
     let db = ctx.data().mongo.clone();
@@ -223,15 +227,12 @@ pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
     let collection: Collection<Document> = client_ref.database("linear").collection("Teams");
 
     let sort_criteria = doc! {
-        "level": -1,
+        "points": -1,
         "last_updated": 1
     };
 
     let options = FindOptions::builder().sort(sort_criteria).build();
     let mut cursor = collection.find(None, options).await?;
-
-    let mut embed = CreateEmbed::default().title("👑 LeaderBoard");
-    let mut m = CreateEmbed::default();
 
     let mut leaderboard: Vec<Document> = Vec::new();
     while let Some(result) = cursor.next().await {
@@ -245,26 +246,32 @@ pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
         }
     }
 
-    for (index, document) in leaderboard.iter().enumerate() {
-        let mut points = document.get_i32("level").unwrap_or(0) * 1000;
-        let g = document.get_array("giveaways").expect("ERROR").len() as i32;
-        let h = document.get_array("hints").expect("ERROR").len() as i32;
-        let tosub = (g + h) * 100 as i32;
-        points = points - tosub;
-        embed = embed.field(
-            format!(
-                "#{} Team {} ",
-                index + 1,
-                document.get_str("name").unwrap_or("NIL")
-            ),
-            format!("{}", points),
-            true,
-        );
-        m = embed.clone()
+    let mut pages = Vec::<String>::new();
+    let j = divide_into_parts(leaderboard.clone(), 4);
+
+    for (_index, column) in j.iter().enumerate() {
+        let mut page = "".to_owned();
+        for (_i, doc) in column.iter().enumerate() {
+            let mut points = doc.get_i32("level").unwrap_or(0) * 1000;
+            let g = doc.get_array("giveaways").expect("ERROR").len() as i32;
+            let h = doc.get_array("hints").expect("ERROR").len() as i32;
+            let tosub = (g + h) * 100 as i32;
+            points = points - tosub;
+
+            let fin = format!(
+                "Team Name: {}\n**Points** - {}\n\n",
+                doc.get_str("name").unwrap_or("NIL"),
+                points
+            );
+            page.push_str(&fin);
+        }
+
+        pages.push(page);
     }
 
-    let builder = poise::CreateReply::default().embed(m);
-    ctx.send(builder).await?;
+    let vec_of_strs: Vec<&str> = pages.iter().map(|s| s.as_str()).collect();
+
+    poise::samples::paginate(ctx, &vec_of_strs).await?;
 
     Ok(())
 }
